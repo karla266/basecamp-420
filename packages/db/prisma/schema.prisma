@@ -1,0 +1,360 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  platform_admin
+  operator
+  client_admin
+  client_viewer
+}
+
+enum ConversationStatus {
+  open
+  closed
+}
+
+enum MessageDirection {
+  inbound
+  outbound
+}
+
+enum MessageStatus {
+  queued
+  sent
+  delivered
+  failed
+  received
+}
+
+enum AutomationTrigger {
+  contact_created
+  manual
+}
+
+enum AutomationRunStatus {
+  pending
+  running
+  completed
+  failed
+  cancelled
+}
+
+enum AutomationRunStepStatus {
+  pending
+  sent
+  failed
+  skipped
+}
+
+enum CallStatus {
+  placed
+  ringing
+  in_progress
+  completed
+  failed
+  canceled
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions    Session[]
+  memberships Membership[]
+  assignments OperatorAssignment[]
+  auditLogs   AuditLog[]
+  invitations Invitation[]         @relation("InvitationsSent")
+  calls       Call[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships   Membership[]
+  assignments   OperatorAssignment[]
+  contacts      Contact[]
+  conversations Conversation[]
+  messages      Message[]
+  templates     MessageTemplate[]
+  calls         Call[]
+  recordings    CallRecording[]
+  automations   Automation[]
+  runs          AutomationRun[]
+  auditLogs     AuditLog[]
+  invitations   Invitation[]
+}
+
+model Membership {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String?
+  role           Role
+  createdAt      DateTime @default(now())
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([organizationId])
+}
+
+model OperatorAssignment {
+  id             String   @id @default(cuid())
+  operatorId     String
+  organizationId String
+  createdAt      DateTime @default(now())
+
+  operator     User         @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([operatorId, organizationId])
+  @@index([organizationId])
+}
+
+model Contact {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  phone          String
+  smsConsent     Boolean  @default(false)
+  callConsent    Boolean  @default(false)
+  smsOptOut      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization  Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+  messages      Message[]
+  calls         Call[]
+  runs          AutomationRun[]
+
+  @@unique([organizationId, phone])
+  @@index([organizationId])
+}
+
+model Conversation {
+  id             String             @id @default(cuid())
+  organizationId String
+  contactId      String
+  status         ConversationStatus @default(open)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contact      Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  messages     Message[]
+
+  @@unique([organizationId, contactId])
+  @@index([organizationId, status])
+}
+
+model Message {
+  id                String           @id @default(cuid())
+  organizationId    String
+  conversationId    String
+  contactId         String
+  direction         MessageDirection
+  body              String
+  status            MessageStatus
+  providerMessageId String?          @unique
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  contact      Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([organizationId])
+}
+
+model MessageTemplate {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  body           String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  steps        AutomationStep[]
+
+  @@index([organizationId])
+}
+
+model Call {
+  id             String     @id @default(cuid())
+  organizationId String
+  contactId      String
+  operatorId     String
+  status         CallStatus @default(placed)
+  providerCallId String?    @unique
+  fromNumber     String
+  toNumber       String
+  startedAt      DateTime?
+  endedAt        DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contact      Contact         @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  operator     User            @relation(fields: [operatorId], references: [id], onDelete: Restrict)
+  recordings   CallRecording[]
+
+  @@index([organizationId, createdAt])
+  @@index([operatorId, status])
+}
+
+model CallRecording {
+  id              String   @id @default(cuid())
+  callId          String
+  organizationId  String
+  storageKey      String
+  url             String
+  contentType     String
+  durationSeconds Int?
+  createdAt       DateTime @default(now())
+
+  call         Call         @relation(fields: [callId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([callId])
+}
+
+model Automation {
+  id             String            @id @default(cuid())
+  organizationId String
+  name           String
+  trigger        AutomationTrigger
+  active         Boolean           @default(true)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  steps        AutomationStep[]
+  runs         AutomationRun[]
+
+  @@index([organizationId, trigger, active])
+}
+
+model AutomationStep {
+  id           String @id @default(cuid())
+  automationId String
+  position     Int
+  templateId   String
+  waitMinutes  Int
+
+  automation Automation        @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  template   MessageTemplate   @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  runSteps   AutomationRunStep[]
+
+  @@unique([automationId, position])
+}
+
+model AutomationRun {
+  id             String              @id @default(cuid())
+  automationId   String
+  contactId      String
+  organizationId String
+  status         AutomationRunStatus @default(pending)
+  currentStep    Int                 @default(0)
+  nextRunAt      DateTime?
+  attemptCount   Int                 @default(0)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  automation   Automation          @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  contact      Contact             @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  steps        AutomationRunStep[]
+
+  @@index([status, nextRunAt])
+  @@index([organizationId])
+  @@index([automationId, contactId])
+}
+
+model AutomationRunStep {
+  id                String                  @id @default(cuid())
+  runId             String
+  stepId            String
+  messageId         String?
+  status            AutomationRunStepStatus
+  providerMessageId String?
+  error             String?
+  createdAt         DateTime                @default(now())
+
+  run  AutomationRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  step AutomationStep @relation(fields: [stepId], references: [id], onDelete: Restrict)
+
+  @@index([runId])
+  @@index([messageId])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  actorId        String?
+  organizationId String?
+  action         String
+  entityType     String
+  entityId       String
+  requestId      String?
+  createdAt      DateTime @default(now())
+
+  actor        User?         @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([entityType, entityId])
+}
+
+model WebhookEvent {
+  id         String   @id @default(cuid())
+  provider   String
+  externalId String
+  createdAt  DateTime @default(now())
+
+  @@unique([provider, externalId])
+}
+
+model Invitation {
+  id             String    @id @default(cuid())
+  email          String
+  organizationId String?
+  role           Role
+  tokenHash      String    @unique
+  invitedById    String
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy    User          @relation("InvitationsSent", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([email])
+}

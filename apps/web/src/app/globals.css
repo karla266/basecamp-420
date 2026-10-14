@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background: #f3efe6;
+  color: #1b1914;
+}
+
+.field {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid #ddd4c4;
+  background: white;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.925rem;
+}
+
+.field:focus {
+  outline: 2px solid #1f6b4a;
+  border-color: #1f6b4a;
+}

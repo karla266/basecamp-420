@@ -1,0 +1,43 @@
+{
+  "name": "@basecamp/api",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n api,worker \"tsx watch src/main.ts\" \"tsx watch src/worker.ts\"",
+    "dev:worker": "tsx watch src/worker.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "seed": "tsx src/seed.ts",
+    "start": "node dist/main.js",
+    "start:worker": "node dist/worker.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.840.0",
+    "@basecamp/comms": "workspace:*",
+    "@basecamp/db": "workspace:*",
+    "@basecamp/shared": "workspace:*",
+    "@nestjs/common": "^10.4.17",
+    "@nestjs/core": "^10.4.17",
+    "@nestjs/platform-express": "^10.4.17",
+    "bullmq": "^5.56.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.5.0",
+    "ioredis": "^5.6.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.17",
+    "@types/cookie-parser": "^1.4.8",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.15.30",
+    "@types/supertest": "^6.0.3",
+    "concurrently": "^9.1.2",
+    "supertest": "^7.1.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

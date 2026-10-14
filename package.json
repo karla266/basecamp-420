@@ -1,0 +1,36 @@
+{
+  "name": "basecamp",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "eslint . && turbo lint",
+    "test": "turbo test",
+    "format": "prettier --write .",
+    "db:generate": "pnpm --filter @basecamp/db generate",
+    "db:migrate": "pnpm --filter @basecamp/db db:migrate",
+    "db:seed": "pnpm --filter @basecamp/api seed"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "msgpackr-extract",
+      "prisma"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.28.0",
+    "eslint": "^9.28.0",
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.33.1"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.15.0"
+}
