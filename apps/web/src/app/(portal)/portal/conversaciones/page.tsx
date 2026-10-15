@@ -15,7 +15,7 @@ export default async function PortalConversationsPage() {
       <ul className="space-y-2 text-sm">
         {result.items.map((conversation) => (
           <li key={conversation.id}>
-            <Link href={`/portal/conversaciones/${conversation.id}?org=${organization.id}`}>
+            <Link className="underline-offset-2 hover:underline" href={`/portal/conversaciones/${conversation.id}?org=${organization.id}`}>
               {conversation.contactName} · {formatWhen(conversation.updatedAt)}
             </Link>
           </li>

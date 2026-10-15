@@ -24,8 +24,14 @@ export default async function AutomationsPage({ searchParams }: { searchParams: 
           <h2 className="mb-3 font-medium">Plantilla</h2>
           <form action={createTemplateAction} className="grid gap-3">
             <input type="hidden" name="organizationId" value={organization.id} />
-            <Input name="name" placeholder="Nombre" required />
-            <textarea name="body" className="field min-h-24" defaultValue="Hola {{name}}" required />
+            <label className="space-y-1 text-sm">
+              <span>Nombre</span>
+              <Input name="name" required />
+            </label>
+            <label className="space-y-1 text-sm">
+              <span>Mensaje</span>
+              <textarea name="body" className="field min-h-24" defaultValue="Hola {{name}}" required />
+            </label>
             <Button type="submit">Guardar plantilla</Button>
           </form>
         </Card>
@@ -35,22 +41,34 @@ export default async function AutomationsPage({ searchParams }: { searchParams: 
           <h2 className="mb-3 font-medium">Secuencia</h2>
           <form action={createAutomationAction} className="grid gap-3">
             <input type="hidden" name="organizationId" value={organization.id} />
-            <Input name="name" placeholder="Nombre" required />
-            <select name="trigger" className="field">
-              <option value="contact_created">Al dar consentimiento SMS</option>
-              <option value="manual">Manual</option>
-            </select>
-            <select name="template0" className="field" required defaultValue="">
-              <option value="" disabled>
-                Plantilla del primer paso
-              </option>
-              {templates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.name}
+            <label className="space-y-1 text-sm">
+              <span>Nombre</span>
+              <Input name="name" required />
+            </label>
+            <label className="space-y-1 text-sm">
+              <span>Activación</span>
+              <select name="trigger" className="field">
+                <option value="contact_created">Al dar consentimiento SMS</option>
+                <option value="manual">Manual</option>
+              </select>
+            </label>
+            <label className="space-y-1 text-sm">
+              <span>Plantilla</span>
+              <select name="template0" className="field" required defaultValue="">
+                <option value="" disabled>
+                  Plantilla del primer paso
                 </option>
-              ))}
-            </select>
-            <Input name="wait0" type="number" min={0} defaultValue={0} />
+                {templates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="space-y-1 text-sm">
+              <span>Espera en minutos</span>
+              <Input name="wait0" type="number" min={0} defaultValue={0} />
+            </label>
             <Button type="submit">Crear secuencia</Button>
           </form>
         </Card>

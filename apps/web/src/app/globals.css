@@ -3,20 +3,20 @@
 @tailwind utilities;
 
 body {
-  background: #f3efe6;
-  color: #1b1914;
+  background: theme('colors.paper');
+  color: theme('colors.ink');
 }
 
 .field {
   width: 100%;
   border-radius: 0.5rem;
-  border: 1px solid #ddd4c4;
-  background: white;
+  border: 1px solid theme('colors.line');
+  background: theme('colors.white');
   padding: 0.55rem 0.75rem;
   font-size: 0.925rem;
 }
 
 .field:focus {
-  outline: 2px solid #1f6b4a;
-  border-color: #1f6b4a;
+  outline: 2px solid theme('colors.pine');
+  border-color: theme('colors.pine');
 }

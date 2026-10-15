@@ -160,6 +160,7 @@ export interface Store {
   findPendingRunStep(runId: string): Promise<RunStepRecord | null>
 
   createWebhookEvent(input: { id: string; provider: string; externalId: string }): Promise<boolean>
+  deleteWebhookEvent(provider: string, externalId: string): Promise<void>
   createAuditLog(input: NewAudit): Promise<AuditRecord>
   createInvitation(input: NewInvitation): Promise<InvitationRecord>
   findInvitationByTokenHash(tokenHash: string): Promise<InvitationRecord | null>

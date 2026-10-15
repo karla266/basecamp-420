@@ -116,14 +116,19 @@ export class CallsService {
       externalId,
     })
     if (!created) return { duplicate: true }
-    await this.queue.enqueue('calls.status', {
-      callSid: input.callSid,
-      callStatus: input.callStatus,
-      ...(input.recordingUrl ? { recordingUrl: input.recordingUrl } : {}),
-      ...(input.recordingSid ? { recordingSid: input.recordingSid } : {}),
-      ...(input.recordingDuration ? { recordingDuration: input.recordingDuration } : {}),
-      ...(input.requestId ? { requestId: input.requestId } : {}),
-    })
+    try {
+      await this.queue.enqueue('calls.status', {
+        callSid: input.callSid,
+        callStatus: input.callStatus,
+        ...(input.recordingUrl ? { recordingUrl: input.recordingUrl } : {}),
+        ...(input.recordingSid ? { recordingSid: input.recordingSid } : {}),
+        ...(input.recordingDuration ? { recordingDuration: input.recordingDuration } : {}),
+        ...(input.requestId ? { requestId: input.requestId } : {}),
+      })
+    } catch (error) {
+      await this.releaseWebhookClaim(externalId)
+      throw error
+    }
     this.logger.info('webhook.accepted', { requestId: input.requestId, provider: 'twilio', kind: 'voice' })
     return { duplicate: false }
   }
@@ -184,6 +189,17 @@ export class CallsService {
       requestId: input.requestId,
       status,
     })
+  }
+
+  private async releaseWebhookClaim(externalId: string): Promise<void> {
+    try {
+      await this.store.deleteWebhookEvent('twilio', externalId)
+    } catch (error) {
+      this.logger.error('webhook.release_failed', {
+        provider: 'twilio',
+        error: error instanceof Error ? error.name : 'Error',
+      })
+    }
   }
 
   async list(actor: Actor, organizationId: string, query: { page?: number; pageSize?: number }) {

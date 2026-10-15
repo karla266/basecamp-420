@@ -551,6 +551,10 @@ export class PrismaStore implements Store {
     }
   }
 
+  async deleteWebhookEvent(provider: string, externalId: string): Promise<void> {
+    await this.prisma.webhookEvent.deleteMany({ where: { provider, externalId } })
+  }
+
   createAuditLog(input: Omit<AuditRecord, 'createdAt'>): Promise<AuditRecord> {
     return this.prisma.auditLog.create({ data: input })
   }

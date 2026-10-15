@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { LogoutButton } from './logout-button'
+import { Button } from './ui/button'
 import type { Me } from '@/lib/types'
 
 const adminLinks = [
@@ -33,17 +34,21 @@ export function Shell({
   const links = area === 'admin' ? adminLinks : portalLinks.filter((link) => link.href !== '/portal/usuarios' || me.memberships.some((item) => item.role === 'client_admin'))
   return (
     <div className="min-h-screen md:grid md:grid-cols-[240px_1fr]">
-      <aside className="bg-ink text-[#f3efe6] md:min-h-screen">
+      <aside className="bg-ink text-paper md:min-h-screen">
         <div className="flex items-center justify-between px-5 py-5 md:block">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-[#c8bfae]">Basecamp</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-paper/70">Basecamp</p>
             <p className="text-lg font-semibold">420</p>
           </div>
           <LogoutButton />
         </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-4 md:block md:space-y-1">
+        <nav aria-label={area === 'admin' ? 'Administración' : 'Portal'} className="flex gap-1 overflow-x-auto px-3 pb-4 md:block md:space-y-1">
           {links.map((link) => (
-            <Link key={link.href} href={link.href} className="block whitespace-nowrap rounded-md px-3 py-2 text-sm hover:bg-white/10">
+            <Link
+              key={link.href}
+              href={link.href}
+              className="block whitespace-nowrap rounded-md px-3 py-2 text-sm hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
+            >
               {link.label}
             </Link>
           ))}
@@ -67,9 +72,9 @@ export function Shell({
                   </option>
                 ))}
               </select>
-              <button className="rounded-md border border-line bg-white px-3 py-2 text-sm" type="submit">
+              <Button type="submit" variant="secondary">
                 Ver
-              </button>
+              </Button>
             </form>
           ) : null}
         </header>

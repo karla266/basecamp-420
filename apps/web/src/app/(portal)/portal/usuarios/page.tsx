@@ -22,11 +22,17 @@ export default async function PortalUsersPage({ searchParams }: { searchParams: 
       <form action={inviteAction} className="grid max-w-lg gap-3">
         <input type="hidden" name="destination" value="/portal/usuarios" />
         <input type="hidden" name="organizationId" value={organization?.id ?? ''} />
-        <Input name="email" type="email" placeholder="Correo" required />
-        <select name="role" className="field">
-          <option value="client_viewer">Lectura</option>
-          <option value="client_admin">Admin del cliente</option>
-        </select>
+        <label className="space-y-1 text-sm">
+          <span>Correo</span>
+          <Input name="email" type="email" required />
+        </label>
+        <label className="space-y-1 text-sm">
+          <span>Rol</span>
+          <select name="role" className="field">
+            <option value="client_viewer">Lectura</option>
+            <option value="client_admin">Admin del cliente</option>
+          </select>
+        </label>
         <Button type="submit">Invitar</Button>
       </form>
       <ul className="text-sm">

@@ -91,10 +91,41 @@ export function createAppContext(ports: AppPorts): AppContext {
   }
 }
 
+const shutdownSteps: Array<() => Promise<void>> = []
+
+function trackRedis(connection: IORedis, logger: Logger): IORedis {
+  connection.on('error', (error: Error) => {
+    logger.error('redis.error', { error: error.name })
+  })
+  return connection
+}
+
+export async function closeProductionResources(): Promise<void> {
+  const steps = shutdownSteps.splice(0)
+  for (const step of steps) {
+    try {
+      await step()
+    } catch (error) {
+      console.error(
+        JSON.stringify({
+          level: 'error',
+          event: 'shutdown.cleanup_failed',
+          error: error instanceof Error ? error.name : 'Error',
+        }),
+      )
+    }
+  }
+}
+
 class BullJobEnqueuer implements JobEnqueuer {
   private readonly queues = new Map<QueueName, Queue>()
 
   constructor(private readonly connection: IORedis) {}
+
+  async close(): Promise<void> {
+    await Promise.all([...this.queues.values()].map((queue) => queue.close()))
+    this.queues.clear()
+  }
 
   async enqueue(queue: QueueName, data: Record<string, unknown>): Promise<void> {
     let bull = this.queues.get(queue)
@@ -147,9 +178,18 @@ export function createProductionContext(): AppContext {
   let rateLimiter: RateLimiter
   let queue: JobEnqueuer
   if (process.env.REDIS_URL) {
-    const connection = new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null })
+    const connection = trackRedis(new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null }), logger)
+    const queueConnection = trackRedis(connection.duplicate(), logger)
+    const enqueuer = new BullJobEnqueuer(queueConnection)
+    shutdownSteps.push(async () => {
+      await enqueuer.close()
+    })
+    shutdownSteps.push(async () => {
+      await queueConnection.quit()
+      await connection.quit()
+    })
     rateLimiter = new RedisRateLimiter(connection, Number.isFinite(limit) ? limit : 30)
-    queue = new BullJobEnqueuer(connection.duplicate())
+    queue = enqueuer
   } else {
     logger.warn('queue.unavailable', {})
     rateLimiter = new MemoryRateLimiter(Number.isFinite(limit) ? limit : 30)

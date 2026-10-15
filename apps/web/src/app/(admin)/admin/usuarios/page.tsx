@@ -21,13 +21,13 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
         <form action={inviteAction} className="grid gap-3 md:grid-cols-2">
           <input type="hidden" name="destination" value="/admin/usuarios" />
           <input type="hidden" name="organizationId" value={organization?.id ?? ''} />
-          <label className="space-y-1 text-sm">
+          <label className="space-y-1 text-sm" htmlFor="invitar-correo">
             <span>Correo</span>
-            <Input name="email" type="email" required />
+            <Input id="invitar-correo" name="email" type="email" required />
           </label>
-          <label className="space-y-1 text-sm">
+          <label className="space-y-1 text-sm" htmlFor="invitar-rol">
             <span>Rol</span>
-            <select name="role" className="field">
+            <select id="invitar-rol" name="role" className="field">
               <option value="operator">Operador</option>
               <option value="platform_admin">Administración de plataforma</option>
               <option value="client_admin">Admin del cliente</option>

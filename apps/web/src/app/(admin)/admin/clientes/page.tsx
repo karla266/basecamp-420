@@ -27,7 +27,10 @@ export default async function ClientsPage({
           <p className="text-sm text-ink/70">Organizaciones que atiende el equipo.</p>
         </div>
         <form className="flex gap-2" action="/admin/clientes">
-          <Input name="q" defaultValue={params.q} placeholder="Buscar" />
+          <label className="sr-only" htmlFor="buscar-clientes">
+            Buscar clientes
+          </label>
+          <Input id="buscar-clientes" name="q" defaultValue={params.q} placeholder="Buscar" />
           <Button type="submit" variant="secondary">
             Buscar
           </Button>
@@ -49,8 +52,12 @@ export default async function ClientsPage({
         <table className="w-full text-left text-sm">
           <thead className="text-ink/60">
             <tr>
-              <th className="pb-2 font-medium">Nombre</th>
-              <th className="pb-2 font-medium">Estado</th>
+              <th className="pb-2 font-medium" scope="col">
+                Nombre
+              </th>
+              <th className="pb-2 font-medium" scope="col">
+                Estado
+              </th>
             </tr>
           </thead>
           <tbody>

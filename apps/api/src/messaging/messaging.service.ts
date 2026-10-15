@@ -217,19 +217,25 @@ export class MessagingService {
     input: { messageSid: string; from: string; to: string; body: string; requestId?: string },
   ): Promise<{ duplicate: boolean }> {
     if (!input.messageSid) throw Errors.badRequest('Datos inválidos')
+    const externalId = `sms:${input.messageSid}`
     const created = await this.store.createWebhookEvent({
       id: randomUUID(),
       provider: 'twilio',
-      externalId: `sms:${input.messageSid}`,
+      externalId,
     })
     if (!created) return { duplicate: true }
-    await this.queue.enqueue('messages.inbound', {
-      messageSid: input.messageSid,
-      from: input.from,
-      to: input.to,
-      body: input.body,
-      ...(input.requestId ? { requestId: input.requestId } : {}),
-    })
+    try {
+      await this.queue.enqueue('messages.inbound', {
+        messageSid: input.messageSid,
+        from: input.from,
+        to: input.to,
+        body: input.body,
+        ...(input.requestId ? { requestId: input.requestId } : {}),
+      })
+    } catch (error) {
+      await this.releaseWebhookClaim('twilio', externalId)
+      throw error
+    }
     this.logger.info('webhook.accepted', { requestId: input.requestId, provider: 'twilio', kind: 'sms' })
     return { duplicate: false }
   }
@@ -285,6 +291,17 @@ export class MessagingService {
     } catch (error) {
       if (error instanceof DuplicateError) return
       throw error
+    }
+  }
+
+  private async releaseWebhookClaim(provider: string, externalId: string): Promise<void> {
+    try {
+      await this.store.deleteWebhookEvent(provider, externalId)
+    } catch (error) {
+      this.logger.error('webhook.release_failed', {
+        provider,
+        error: error instanceof Error ? error.name : 'Error',
+      })
     }
   }
 

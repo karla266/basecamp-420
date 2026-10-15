@@ -557,6 +557,10 @@ export class MemoryStore implements Store {
     return true
   }
 
+  async deleteWebhookEvent(provider: string, externalId: string): Promise<void> {
+    this.webhookKeys.delete(`${provider}:${externalId}`)
+  }
+
   async createAuditLog(input: Omit<AuditRecord, 'createdAt'>): Promise<AuditRecord> {
     const audit = { ...input, createdAt: new Date() }
     this.audits.push(audit)

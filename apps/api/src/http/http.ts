@@ -57,7 +57,8 @@ export class TenantGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest<AuthedRequest>()
     const organizationId = req.params.organizationId
-    if (!organizationId || !req.actor) return true
+    if (!organizationId) return true
+    if (!req.actor) throw new AppError(401, 'Inicia sesión', 'unauthorized')
     if (!canAccessOrganization(req.actor, organizationId)) {
       throw new AppError(403, 'No tienes acceso a esta organización', 'forbidden')
     }
